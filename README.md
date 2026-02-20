@@ -1,7 +1,14 @@
 # agent-dev
 
-A collection of agent skills and SDD (Spec-Driven Development) workflows for onboarding, specifying, and maintaining
-software repositories using GitHub Copilot agent mode.
+This repository contains two independent things:
+
+|                              | What it is                                             | Where it lives    | Portability                        |
+|------------------------------|--------------------------------------------------------|-------------------|------------------------------------|
+| **Agents**                   | Copilot sub-agent definitions used within this repo    | `.github/agents/` | Tied to this repo                  |
+| **reverse-spec skill suite** | Portable skills for onboarding any repository into SDD | `skills/`         | Install into any VS Code workspace |
+
+They do not depend on each other. You can use the reverse-spec skills on any repository without the agents, and the
+agents work without the skills.
 
 ---
 
@@ -9,20 +16,61 @@ software repositories using GitHub Copilot agent mode.
 
 ```
 agent-dev/
-  skills/
-    external-research/    ← researches Jira, Confluence, GitHub; writes findings cache
-    reverse-spec/         ← orchestrator: 6-phase spec generation, resumable
+  .github/
+    agents/               ← Copilot sub-agents for work within this repo
+      Conductor.agent.md
+      Implementer.agent.md
+      Researcher.agent.md
+      Reviewer.agent.md
+  skills/                 ← standalone, portable skill suite (install anywhere)
+    external-research/
+      SKILL.md
+    reverse-spec/
+      SKILL.md
       prompts/
         chunk-analysis.md
         synthesize-spec.md
-    spec-verify/          ← 3-pass automated verification + optional LLM deep-gap check
+    spec-verify/
+      SKILL.md
   sdd/
-    spec-driven-development-workflow.md   ← SDD methodology and all workflow definitions
+    spec-driven-development-workflow.md   ← SDD methodology and workflow definitions
+  prompt/
+    reverse-spec.md       ← design decisions and requirements for the skill suite
 ```
 
 ---
 
-## reverse-spec skill
+## Agents
+
+Four Copilot sub-agent definitions live in `.github/agents/`. They are used by Copilot
+agent mode **within this repository** to coordinate complex multi-step work:
+
+| Agent         | Role                                                                    |
+|---------------|-------------------------------------------------------------------------|
+| `Conductor`   | Orchestrates planning and delegates to other sub-agents                 |
+| `Researcher`  | Codebase discovery — reads files, searches, returns structured findings |
+| `Implementer` | Executes focused code changes with validation                           |
+| `Reviewer`    | Reviews changes and reports issues                                      |
+
+These agents are repository-local. They are not installed or invoked on other repos.
+
+### Installation
+
+No manual installation needed. Copilot agent mode automatically discovers agent definitions from
+`.github/agents/` when `agent-dev` is the open workspace in VS Code.
+
+**Requirements:**
+
+- VS Code with [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat)
+- Copilot Chat agent mode enabled (`"github.copilot.chat.agentMode": true` in VS Code settings)
+- `agent-dev` open as the workspace root
+
+---
+
+## reverse-spec skill suite
+
+> **Standalone and portable.** Install into any VS Code workspace — no dependency on `agent-dev`
+> being open, on the agents above, or on any specific language or framework.
 
 Generates a comprehensive SDD-compliant specification for an existing repository by analysing code, tests, config, and
 external sources (Jira, Confluence, GitHub) in resumable chunks.
@@ -80,13 +128,25 @@ cp -r $AGENT_DEV/skills/spec-verify ~/.vscode/agents/
 
 #### 3. MCP configuration
 
-The `external-research` skill uses MCP servers for external source lookup.  
-Configure them in your VS Code `settings.json` (`Cmd+Shift+P` → *Preferences: Open User Settings (JSON)*):
+The `external-research` skill resolves GitHub lookups in this order:
+
+1. **`gh` CLI** — used if `gh` is found in `PATH`. Faster, no MCP server required.
+2. **GitHub MCP server** — fallback if `gh` is absent or not authenticated.
+
+**Install and authenticate the `gh` CLI (recommended):**
+
+```bash
+brew install gh
+gh auth login
+```
+
+For Atlassian (Jira + Confluence) and the GitHub MCP fallback, configure MCP servers in your VS Code
+`settings.json` (`Cmd+Shift+P` → *Preferences: Open User Settings (JSON)*):
 
 ```jsonc
 {
   "github.copilot.chat.mcp.servers": {
-    // Atlassian (Jira + Confluence)
+    // Atlassian (Jira + Confluence) — required for Jira epic and Confluence page lookup
     "atlassian": {
       "command": "npx",
       "args": ["-y", "@atlassian/mcp-server"],
@@ -96,7 +156,7 @@ Configure them in your VS Code `settings.json` (`Cmd+Shift+P` → *Preferences: 
         "ATLASSIAN_API_TOKEN": "<your-api-token>"
       }
     },
-    // GitHub (dependency repo lookup)
+    // GitHub MCP — only needed if gh CLI is not available
     "github": {
       "command": "npx",
       "args": ["-y", "@github/mcp-server"],
@@ -108,8 +168,8 @@ Configure them in your VS Code `settings.json` (`Cmd+Shift+P` → *Preferences: 
 }
 ```
 
-> Only configure the servers you have access to. The skill skips sources whose MCP server is not available and records
-> them as `unavailable` in the findings cache.
+> Only configure the servers you have access to. The skill skips unavailable sources and records
+> them as `unavailable` in the findings cache under `## Meta`.
 
 ---
 
@@ -234,9 +294,10 @@ re-invokes `spec-verify`. The loop continues until all thresholds are met or you
 
 ### Troubleshooting
 
-| Symptom                             | Likely cause                     | Fix                                                                                          |
-|-------------------------------------|----------------------------------|----------------------------------------------------------------------------------------------|
-| `external-research` finds nothing   | MCP server not running           | Check MCP server config in `settings.json`; run `npx @atlassian/mcp-server` manually to test |
-| Skill does not appear in agent mode | Files not in `~/.vscode/agents/` | Re-check installation path; restart VS Code                                                  |
-| State file not found on resume      | Wrong workspace folder active    | Ensure the target repo folder is the active workspace root                                   |
-| Coverage stuck below threshold      | NFRs only in infra configs       | Run `@spec-verify deep_check=true`; review flagged open questions manually                   |
+| Symptom                                       | Likely cause                          | Fix                                                                                    |
+|-----------------------------------------------|---------------------------------------|----------------------------------------------------------------------------------------|
+| `external-research` finds nothing (GitHub)    | `gh` not installed or unauthenticated | Run `brew install gh && gh auth login`; or configure the GitHub MCP server as fallback |
+| `external-research` finds nothing (Atlassian) | MCP server not running                | Check `settings.json`; run `npx @atlassian/mcp-server` manually to test                |
+| Skill does not appear in agent mode           | Files not in `~/.vscode/agents/`      | Re-check installation path; restart VS Code                                            |
+| State file not found on resume                | Wrong workspace folder active         | Ensure the target repo folder is the active workspace root                             |
+| Coverage stuck below threshold                | NFRs only in infra configs            | Run `@spec-verify deep_check=true`; review flagged open questions manually             |
