@@ -2,10 +2,10 @@
 
 This repository contains two independent things:
 
-|                              | What it is                                             | Where it lives    | Portability                        |
-|------------------------------|--------------------------------------------------------|-------------------|------------------------------------|
-| **Agents**                   | Copilot sub-agent definitions used within this repo    | `.github/agents/` | Tied to this repo                  |
-| **reverse-spec skill suite** | Portable skills for onboarding any repository into SDD | `skills/`         | Install into any VS Code workspace |
+|                              | What it is                                             | Where it lives                | Portability                        |
+|------------------------------|--------------------------------------------------------|-------------------------------|------------------------------------|
+| **conductor agent suite**    | Copilot sub-agent definitions used within this repo    | `.github/agents/`             | Tied to this repo                  |
+| **reverse-spec skill suite** | Portable skills for onboarding any repository into SDD | `suites/reverse-spec/skills/` | Install into any VS Code workspace |
 
 They do not depend on each other. You can use the reverse-spec skills on any repository without the agents, and the
 agents work without the skills.
@@ -22,16 +22,21 @@ agent-dev/
       Implementer.agent.md
       Researcher.agent.md
       Reviewer.agent.md
-  skills/                 ← standalone, portable skill suite (install anywhere)
-    external-research/
-      SKILL.md
-    reverse-spec/
-      SKILL.md
-      prompts/
-        chunk-analysis.md
-        synthesize-spec.md
-    spec-verify/
-      SKILL.md
+  suites/
+    conductor/            ← installer for the conductor agent suite
+      install.sh          ← one-liner installer (curl | bash)
+    reverse-spec/         ← standalone, portable reverse-spec skill suite
+      install.sh          ← one-liner installer (curl | bash)
+      skills/
+        external-research/
+          SKILL.md
+        reverse-spec/
+          SKILL.md
+          prompts/
+            chunk-analysis.md
+            synthesize-spec.md
+        spec-verify/
+          SKILL.md
   sdd/
     spec-driven-development-workflow.md   ← SDD methodology and workflow definitions
   prompt/
@@ -52,9 +57,9 @@ agent mode **within this repository** to coordinate complex multi-step work:
 | `Implementer` | Executes focused code changes with validation                           |
 | `Reviewer`    | Reviews changes and reports issues                                      |
 
-These agents are repository-local. They are not installed or invoked on other repos.
+These agents live in this repo, but can also be installed into any other repository via the conductor suite installer.
 
-### Installation
+### Installation in `agent-dev`
 
 No manual installation needed. Copilot agent mode automatically discovers agent definitions from
 `.github/agents/` when `agent-dev` is the open workspace in VS Code.
@@ -64,6 +69,14 @@ No manual installation needed. Copilot agent mode automatically discovers agent 
 - VS Code with [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat)
 - Copilot Chat agent mode enabled (`"github.copilot.chat.agentMode": true` in VS Code settings)
 - `agent-dev` open as the workspace root
+
+### Installation in another repo (one-liner)
+
+Run this inside the root of the repository you want to install the conductor suite into:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sergseven/agent-dev/main/suites/conductor/install.sh | bash
+```
 
 ---
 
@@ -88,33 +101,29 @@ external sources (Jira, Confluence, GitHub) in resumable chunks.
 
 ### Installation
 
-#### 1. Copy the skills into your VS Code user agents directory
+#### One-liner (recommended)
+
+Run this inside the root of the repository you want to onboard:
 
 ```bash
-# Create the agents directory if it does not exist
-mkdir -p ~/.vscode/agents
-
-# Copy all three skills
-cp -r /path/to/agent-dev/skills/external-research ~/.vscode/agents/
-cp -r /path/to/agent-dev/skills/reverse-spec ~/.vscode/agents/
-cp -r /path/to/agent-dev/skills/spec-verify ~/.vscode/agents/
+curl -fsSL https://raw.githubusercontent.com/sergseven/agent-dev/main/suites/reverse-spec/install.sh | bash
 ```
 
-Or, if you have the `agent-dev` repo cloned alongside your target repos:
+**Requirements:** `bash`, `curl`, `tar` — all pre-installed on macOS and most Linux distros. No Node.js, no npm.
 
-```bash
-AGENT_DEV=~/dev/agent-dev
+The script will:
 
-mkdir -p ~/.vscode/agents
-cp -r $AGENT_DEV/skills/external-research ~/.vscode/agents/
-cp -r $AGENT_DEV/skills/reverse-spec ~/.vscode/agents/
-cp -r $AGENT_DEV/skills/spec-verify ~/.vscode/agents/
+1. Ask which agent type to install for (currently only **Copilot** is supported)
+2. Download the skill suite from GitHub
+3. Install to `.github/agents/` inside the **current directory** (project-local)
+4. Overwrite any existing skill with the same name
+
+#### Verify the installed structure
+
+After running, your project should contain:
+
 ```
-
-#### 2. Verify the structure
-
-```
-~/.vscode/agents/
+.github/agents/
   external-research/
     SKILL.md
   reverse-spec/
@@ -124,6 +133,18 @@ cp -r $AGENT_DEV/skills/spec-verify ~/.vscode/agents/
       synthesize-spec.md
   spec-verify/
     SKILL.md
+```
+
+#### Manual installation (fallback)
+
+If `curl` is unavailable, clone `agent-dev` and copy the skills directly:
+
+```bash
+AGENT_DEV=/path/to/agent-dev
+mkdir -p .github/agents
+cp -r $AGENT_DEV/suites/reverse-spec/skills/external-research .github/agents/
+cp -r $AGENT_DEV/suites/reverse-spec/skills/reverse-spec .github/agents/
+cp -r $AGENT_DEV/suites/reverse-spec/skills/spec-verify .github/agents/
 ```
 
 #### 3. MCP configuration
@@ -298,6 +319,6 @@ re-invokes `spec-verify`. The loop continues until all thresholds are met or you
 |-----------------------------------------------|---------------------------------------|----------------------------------------------------------------------------------------|
 | `external-research` finds nothing (GitHub)    | `gh` not installed or unauthenticated | Run `brew install gh && gh auth login`; or configure the GitHub MCP server as fallback |
 | `external-research` finds nothing (Atlassian) | MCP server not running                | Check `settings.json`; run `npx @atlassian/mcp-server` manually to test                |
-| Skill does not appear in agent mode           | Files not in `~/.vscode/agents/`      | Re-check installation path; restart VS Code                                            |
+| Skill does not appear in agent mode           | Files not in `.github/agents/`        | Re-check installation path; restart VS Code                                            |
 | State file not found on resume                | Wrong workspace folder active         | Ensure the target repo folder is the active workspace root                             |
 | Coverage stuck below threshold                | NFRs only in infra configs            | Run `@spec-verify deep_check=true`; review flagged open questions manually             |
