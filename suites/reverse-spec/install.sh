@@ -9,7 +9,7 @@ REPO="sergseven/agent-dev"
 BRANCH="main"
 TARBALL_URL="https://api.github.com/repos/${REPO}/tarball/${BRANCH}"
 SKILLS=(external-research reverse-spec spec-verify)
-DEST_DIR=".github/skills"
+DEST_DIR=".agents/skills"
 
 # ── colours (suppressed if not a tty) ──────────────────────────────────────────
 if [ -t 1 ]; then
@@ -23,6 +23,7 @@ echo -e "${BOLD}reverse-spec skill suite installer${RESET}"
 echo "────────────────────────────────────"
 echo ""
 echo -e "Install to : ${GREEN}${PWD}/${DEST_DIR}${RESET}"
+echo -e "Compatible : GitHub Copilot · Codex CLI"
 echo ""
 
 # ── 1. confirm ──────────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ This repository contains two independent things:
 |                              | What it is                                             | Where it lives                | Portability                        |
 |------------------------------|--------------------------------------------------------|-------------------------------|------------------------------------|
 | **conductor agent suite**    | Copilot sub-agent definitions used within this repo    | `.github/agents/`             | Tied to this repo                  |
-| **reverse-spec skill suite** | Portable skills for onboarding any repository into SDD | `suites/reverse-spec/skills/` | Install into any VS Code workspace |
+| **reverse-spec skill suite** | Portable skills for onboarding any repository into SDD | `suites/reverse-spec/skills/` | Install into any repo (Copilot · Codex CLI) |
 
 They do not depend on each other. You can use the reverse-spec skills on any repository without the agents, and the
 agents work without the skills.
@@ -114,15 +114,17 @@ curl -fsSL https://raw.githubusercontent.com/sergseven/agent-dev/main/suites/rev
 The script will:
 
 1. Download the skill suite from GitHub
-2. Install to `.github/skills/` inside the **current directory** (project-local)
+2. Install to `.agents/skills/` inside the **current directory** (project-local)
 3. Overwrite any existing skill with the same name
+
+`.agents/skills/` is picked up by both **GitHub Copilot** and **Codex CLI** automatically.
 
 #### Verify the installed structure
 
 After running, your project should contain:
 
 ```
-.github/skills/
+.agents/skills/
   external-research/
     SKILL.md
   reverse-spec/
@@ -140,10 +142,10 @@ If `curl` is unavailable, clone `agent-dev` and copy the skills directly:
 
 ```bash
 AGENT_DEV=/path/to/agent-dev
-mkdir -p .github/skills
-cp -r $AGENT_DEV/suites/reverse-spec/skills/external-research .github/skills/
-cp -r $AGENT_DEV/suites/reverse-spec/skills/reverse-spec .github/skills/
-cp -r $AGENT_DEV/suites/reverse-spec/skills/spec-verify .github/skills/
+mkdir -p .agents/skills
+cp -r $AGENT_DEV/suites/reverse-spec/skills/external-research .agents/skills/
+cp -r $AGENT_DEV/suites/reverse-spec/skills/reverse-spec .agents/skills/
+cp -r $AGENT_DEV/suites/reverse-spec/skills/spec-verify .agents/skills/
 ```
 
 #### 3. MCP configuration
@@ -318,6 +320,6 @@ re-invokes `spec-verify`. The loop continues until all thresholds are met or you
 |-----------------------------------------------|---------------------------------------|----------------------------------------------------------------------------------------|
 | `external-research` finds nothing (GitHub)    | `gh` not installed or unauthenticated | Run `brew install gh && gh auth login`; or configure the GitHub MCP server as fallback |
 | `external-research` finds nothing (Atlassian) | MCP server not running                | Check `settings.json`; run `npx @atlassian/mcp-server` manually to test                |
-| Skill does not appear in agent mode           | Files not in `.github/skills/`        | Re-check installation path; restart VS Code                                            |
+| Skill does not appear in agent mode           | Files not in `.agents/skills/`        | Re-check installation path; restart VS Code / Codex CLI                                |
 | State file not found on resume                | Wrong workspace folder active         | Ensure the target repo folder is the active workspace root                             |
 | Coverage stuck below threshold                | NFRs only in infra configs            | Run `@spec-verify deep_check=true`; review flagged open questions manually             |
