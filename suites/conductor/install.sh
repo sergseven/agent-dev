@@ -26,7 +26,7 @@ echo ""
 echo "Which agent type are you installing for?"
 echo "  1) GitHub Copilot  (installs to .github/agents/ in current project)"
 echo ""
-read -rp "Enter choice [1]: " agent_choice
+read -rp "Enter choice [1]: " agent_choice </dev/tty
 agent_choice="${agent_choice:-1}"
 
 case "$agent_choice" in
@@ -46,7 +46,7 @@ echo -e "Install to : ${GREEN}${PWD}/${DEST_DIR}${RESET}"
 echo ""
 
 # ── 2. confirm ──────────────────────────────────────────────────────────────────
-read -rp "Proceed? Existing agents with the same name will be overwritten. [Y/n]: " confirm
+read -rp "Proceed? Existing agents with the same name will be overwritten. [Y/n]: " confirm </dev/tty
 confirm="${confirm:-Y}"
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
   echo "Aborted."

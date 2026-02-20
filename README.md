@@ -113,17 +113,16 @@ curl -fsSL https://raw.githubusercontent.com/sergseven/agent-dev/main/suites/rev
 
 The script will:
 
-1. Ask which agent type to install for (currently only **Copilot** is supported)
-2. Download the skill suite from GitHub
-3. Install to `.github/agents/` inside the **current directory** (project-local)
-4. Overwrite any existing skill with the same name
+1. Download the skill suite from GitHub
+2. Install to `.github/skills/` inside the **current directory** (project-local)
+3. Overwrite any existing skill with the same name
 
 #### Verify the installed structure
 
 After running, your project should contain:
 
 ```
-.github/agents/
+.github/skills/
   external-research/
     SKILL.md
   reverse-spec/
@@ -141,10 +140,10 @@ If `curl` is unavailable, clone `agent-dev` and copy the skills directly:
 
 ```bash
 AGENT_DEV=/path/to/agent-dev
-mkdir -p .github/agents
-cp -r $AGENT_DEV/suites/reverse-spec/skills/external-research .github/agents/
-cp -r $AGENT_DEV/suites/reverse-spec/skills/reverse-spec .github/agents/
-cp -r $AGENT_DEV/suites/reverse-spec/skills/spec-verify .github/agents/
+mkdir -p .github/skills
+cp -r $AGENT_DEV/suites/reverse-spec/skills/external-research .github/skills/
+cp -r $AGENT_DEV/suites/reverse-spec/skills/reverse-spec .github/skills/
+cp -r $AGENT_DEV/suites/reverse-spec/skills/spec-verify .github/skills/
 ```
 
 #### 3. MCP configuration
@@ -319,6 +318,6 @@ re-invokes `spec-verify`. The loop continues until all thresholds are met or you
 |-----------------------------------------------|---------------------------------------|----------------------------------------------------------------------------------------|
 | `external-research` finds nothing (GitHub)    | `gh` not installed or unauthenticated | Run `brew install gh && gh auth login`; or configure the GitHub MCP server as fallback |
 | `external-research` finds nothing (Atlassian) | MCP server not running                | Check `settings.json`; run `npx @atlassian/mcp-server` manually to test                |
-| Skill does not appear in agent mode           | Files not in `.github/agents/`        | Re-check installation path; restart VS Code                                            |
+| Skill does not appear in agent mode           | Files not in `.github/skills/`        | Re-check installation path; restart VS Code                                            |
 | State file not found on resume                | Wrong workspace folder active         | Ensure the target repo folder is the active workspace root                             |
 | Coverage stuck below threshold                | NFRs only in infra configs            | Run `@spec-verify deep_check=true`; review flagged open questions manually             |
