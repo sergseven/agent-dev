@@ -1,13 +1,8 @@
-```skill
 ---
 name: reverse-spec
 version: 1.0.0
 status: published
-description: >
-  Onboards an existing repository into the Specification-Driven Development (SDD)
-  workflow by analysing its code and external knowledge sources in bounded-context
-  chunks, then generating a full spec/ directory that is precise enough to
-  reimplement the system from scratch. Resumable after interruption.
+description: Onboards an existing repository into the Specification-Driven Development (SDD) workflow by analysing its code and external knowledge sources in bounded-context chunks, then generating a full spec/ directory that is precise enough to reimplement the system from scratch; resumable after interruption.
 authors:
   - name: agent-dev team
 created: 2026-02-20
@@ -76,7 +71,6 @@ All progress is persisted in `{repo_path}/spec/.reverse-spec-state.json`.
   ],
   "verify_result": null
 }
-```
 
 On each invocation: read this file first. If it exists and `status` is
 `in_progress`, resume from `current_phase` with `chunks.pending`. If `status`

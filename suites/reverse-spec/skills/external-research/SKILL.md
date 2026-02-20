@@ -1,13 +1,8 @@
-```skill
 ---
 name: external-research
 version: 1.0.0
 status: published
-description: >
-  Researches external knowledge sources (Jira, Confluence, GitHub) for a given
-  set of domains in a target repository. Produces a structured findings document
-  that other skills (reverse-spec, spec-verify) consume instead of re-querying
-  the same sources. Slack and Google Docs support is planned for v2.
+description: Researches external knowledge sources (Jira, Confluence, GitHub) for domains in a target repository and produces a structured findings document consumed by reverse-spec and spec-verify instead of re-querying sources; Slack and Google Docs support is planned for v2.
 authors:
   - name: agent-dev team
 created: 2026-02-20
@@ -173,7 +168,6 @@ searched external source. These must be flagged as explicit open questions in
 the generated spec:
 
 - {topic}: no Jira epic, no Confluence page, no GitHub doc found
-```
 
 ### Step 6 — Report completion
 

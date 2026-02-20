@@ -1,14 +1,8 @@
-```skill
 ---
 name: spec-verify
 version: 1.0.0
 status: published
-description: >
-  Verifies structural coverage of a generated spec/ directory against the actual
-  codebase. Checks that every public entrypoint is documented, every service-layer
-  branch has a spec scenario, and every test has a matching acceptance criterion.
-  Optionally runs an LLM-based "new developer questions" deep-gap check.
-  Returns PASS (≥80% coverage) or NEEDS_WORK with a detailed coverage report.
+description: Verifies structural coverage of a generated spec/ directory against the actual codebase by checking entrypoints, service-layer branches, and test-to-acceptance mapping; optionally runs an LLM-based deep-gap check and returns PASS (>=80% entrypoint coverage) or NEEDS_WORK with a detailed report.
 authors:
   - name: agent-dev team
 created: 2026-02-20
@@ -177,7 +171,6 @@ but underspecified, or behaviours that are implied but never articulated.
 
 For each domain spec file, send a request:
 
-```
 System: You are an experienced developer who has read only this specification
 and must implement this feature from scratch, with no other context.
 
